@@ -18,7 +18,7 @@ Run: python -m src.train
 import json
 
 import pandas as pd
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
@@ -51,6 +51,7 @@ MODELS = {
     "ridge": make_pipeline(StandardScaler(), Ridge(alpha=1.0)),
     "hgb": HistGradientBoostingRegressor(random_state=0, max_iter=300),
 }
+EXPERIMENTAL_FEATURE = "cnt_roll_3"
 
 
 def temporal_split(df: pd.DataFrame):
@@ -62,11 +63,7 @@ def temporal_split(df: pd.DataFrame):
     return train, valid, test
 
 
-def fit_and_score() -> dict:
-    df = pd.read_parquet(PROCESSED)
-    cols = feature_columns(df)
-    train, valid, test = temporal_split(df)
-
+def score_feature_set(cols, train, valid, test) -> dict:
     results = {
         "n_features": len(cols),
         "features": cols,
@@ -74,8 +71,8 @@ def fit_and_score() -> dict:
         "n_valid": len(valid),
         "n_test": len(test),
     }
-    for name, model in MODELS.items():
-        model.fit(train[cols], train[TARGET])
+    for name, estimator in MODELS.items():
+        model = clone(estimator).fit(train[cols], train[TARGET])
         results[name] = {
             split: {
                 "r2": round(float(r2_score(part[TARGET], model.predict(part[cols]))), 4),
@@ -83,6 +80,18 @@ def fit_and_score() -> dict:
             }
             for split, part in [("valid", valid), ("test", test)]
         }
+    return results
+
+
+def fit_and_score() -> dict:
+    df = pd.read_parquet(PROCESSED)
+    cols = feature_columns(df)
+    train, valid, test = temporal_split(df)
+
+    selected = [column for column in cols if column != EXPERIMENTAL_FEATURE]
+    results = score_feature_set(selected, train, valid, test)
+    if EXPERIMENTAL_FEATURE in cols:
+        results["with_cnt_roll_3"] = score_feature_set(cols, train, valid, test)
     return results
 
 

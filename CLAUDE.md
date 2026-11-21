@@ -9,6 +9,8 @@ rides) from calendar, weather, and lagged-demand features.
 - `make train` - fit models, write `reports/metrics.json`
 - `make test` - pytest; run this before claiming anything works
 - `make all` - the three pipeline stages in order
+- `/seed-fault <description>` - reproduce one Exercise 2 fault and capture
+  the hook and repair evidence in a disposable copy
 
 ## Non-negotiable rules
 - **Never** put `casual` or `registered` in a feature set:
@@ -23,6 +25,8 @@ rides) from calendar, weather, and lagged-demand features.
 - Report the mean baseline **and** the persistence baseline (yesterday's
   count) alongside every model. A negative R^2 is a finding, not a bug
   to hide.
+- Keep `cnt_roll_3` for the feature comparison. Select the baseline feature
+  set for the main results, using the validation scores as the basis.
 
 ## Style
 - Standard library, pandas, scikit-learn only. No new dependencies
