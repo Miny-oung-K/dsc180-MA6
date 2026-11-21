@@ -73,19 +73,24 @@ The numbers above match the selected feature set in the final `reports/metrics.j
 ## Attribution
 
 Minyoung used hosted Claude Opus 5.5 in the Claude app's agent workspace
-with instructor permission. Brian used DeepSeek V4.1 Flash 1017 through
-OpenRouter in Claude Code at max effort. Brian switched the planned
+with instructor permission; Anthropic does not publish its parameter
+count. Brian used DeepSeek V4.1 Flash 1017 through
+OpenRouter in Claude Code at max effort, as a hosted model; we did not
+record a parameter count for it. Brian switched the planned
 provider from Ollama before running any local model and also used Codex
 for implementation, verification, and drafting. The merged repo's
 `agent/audit.py` run used DeepSeek V4.1 Flash 1017 via OpenRouter and
-reported no leakage or findings.
+reported no leakage or findings, both before and after the final test
+and checksum changes.
 
 **Agent-generated or agent-assisted work**
 
 - Minyoung's agent wrote the three-day feature and test, the Exercise 1
   red-test evidence, Minyoung's audit and draft verdict, the ratio-target
   implementation and evaluation, and parts of the report. It also
-  assisted with the branch merge and conflict resolution.
+  assisted with the branch merge and conflict resolution, wrote the raw
+  CSV checksum check, the calendar-lag and same-day perturbation tests,
+  and the three seeded-fault and fix commits.
 - Brian's agents wrote the raw-header and weather contract tests, the
   schema classifications, the hook and `/seed-fault` skill, the fault
   evidence, Brian's audit and draft verdict, the separate feature
