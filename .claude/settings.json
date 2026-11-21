@@ -1,0 +1,27 @@
+{
+  "model": "bikeshare-coder",
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:11434",
+    "ANTHROPIC_AUTH_TOKEN": "ollama",
+    "ANTHROPIC_API_KEY": ""
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check_leakage.sh\"",
+            "timeout": 60,
+            "statusMessage": "Running pipeline tests..."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": ["Bash(make:*)", "Bash(python -m pytest:*)"],
+    "deny": ["Write(./data/raw/**)", "Edit(./data/raw/**)", "Bash(rm -rf:*)"]
+  }
+}
