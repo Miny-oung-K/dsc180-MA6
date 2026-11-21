@@ -180,6 +180,14 @@ FAILED tests/test_leakage.py::test_rolling_mean_excludes_today - assert np.fl...
 [hook exit 2]
 ```
 
+On merged commit `d9cdcc4`, we reapplied the diff in a disposable copy, invoked the hook with an Edit payload, restored the original source, and ran `make test`.
+
+```text
+FAILED tests/test_leakage.py::test_rolling_mean_excludes_today - assert np.fl...
+[hook exit 2]
+17 passed in 1.43s
+```
+
 ## Weather encoder silently accepts unknown labels
 
 ```diff
