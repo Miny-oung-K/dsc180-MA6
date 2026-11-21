@@ -32,3 +32,4 @@ this team actually used the test scores.
 - 2026-11-20: Close two test gaps found in the final review. (1) Every lag and rolling feature is checked against exact calendar days on every row, so skipping `reindex_to_calendar` or an off-by-one shift now fails. (2) A perturbation test changes same-day `cnt` and requires every model input on that day to stay unchanged, so a renamed copy of today's count (found by Brian's agent) fails and the hook exits 2. 23 tests pass.
 - 2026-11-20: Seeded fault 1 (forbidden target column in feature_columns) committed on purpose so the history shows it; `make test` goes red: 4 failed, 19 passed in 2.40s.
 - 2026-11-20: Fixed seeded fault 1 by restoring the original source; `make test`: 23 passed in 2.37s.
+- 2026-11-20: Seeded fault 2 (.shift(1) deleted from cnt_roll_7) committed on purpose so the history shows it; `make test` goes red: 5 failed, 18 passed in 3.49s.
