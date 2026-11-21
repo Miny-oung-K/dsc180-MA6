@@ -85,6 +85,14 @@ FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: fo...
 [hook exit 2]
 ```
 
+On merged commit `d9cdcc4`, we reapplied the diff in a disposable copy, invoked the hook with an Edit payload, restored the original source, and ran `make test`.
+
+```text
+FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: fo...
+[hook exit 2]
+17 passed in 1.51s
+```
+
 ## Rolling mean includes the current day
 
 ```diff
