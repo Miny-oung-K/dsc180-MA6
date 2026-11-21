@@ -64,3 +64,18 @@ def test_no_missing_values(feats):
 def test_dates_are_sorted_and_unique(feats):
     assert feats.dteday.is_monotonic_increasing
     assert feats.dteday.is_unique
+
+
+def test_roll_3_is_mean_of_three_preceding_days(feats):
+    """cnt_roll_3 on 2011-06-15 must be the mean of cnt on the three calendar
+    days *before* it, never including the day itself.
+
+    Hand-computed from data/raw/bike_daily.csv:
+      2011-06-12  cnt = 4460
+      2011-06-13  cnt = 5020
+      2011-06-14  cnt = 4891
+      mean = 14371 / 3 = 4790.333...
+    (Including 2011-06-15 itself, cnt = 5180, would give 5030.333 -- leakage.)
+    """
+    row = feats.set_index("dteday").loc[pd.Timestamp("2011-06-15")]
+    assert row.cnt_roll_3 == pytest.approx((4460 + 5020 + 4891) / 3)
