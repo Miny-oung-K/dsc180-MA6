@@ -95,7 +95,33 @@ def fit_and_score() -> dict:
     return results
 
 
+def score_ratio_target(splits=("valid",)) -> dict:
+    """Exercise 4: HGB fit to cnt / cnt_roll_7, inverted with the same
+    prior-only mean. Never writes METRICS; the committed metrics stay
+    untransformed. Pass splits=("valid", "test") only for the one final check."""
+    df = pd.read_parquet(PROCESSED)
+    cols = [c for c in feature_columns(df) if c != EXPERIMENTAL_FEATURE]
+    train, valid, test = temporal_split(df)
+    parts = {"valid": valid, "test": test}
+    model = clone(MODELS["hgb"]).fit(train[cols], train[TARGET] / train["cnt_roll_7"])
+    out = {}
+    for split in splits:
+        part = parts[split]
+        pred = model.predict(part[cols]) * part["cnt_roll_7"].to_numpy()
+        out[split] = {
+            "r2": round(float(r2_score(part[TARGET], pred)), 4),
+            "mae": round(float(mean_absolute_error(part[TARGET], pred)), 1),
+        }
+    return {"hgb_ratio_target": out}
+
+
 if __name__ == "__main__":
+    import sys
+
+    if "--ratio-target" in sys.argv:
+        splits = ("valid", "test") if "--final" in sys.argv else ("valid",)
+        print(json.dumps(score_ratio_target(splits), indent=2))
+        sys.exit(0)
     res = fit_and_score()
     METRICS.parent.mkdir(parents=True, exist_ok=True)
     METRICS.write_text(json.dumps(res, indent=2))

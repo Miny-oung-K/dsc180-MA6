@@ -33,8 +33,20 @@ The resulting validation R² was 0.7454 and MAE was 687.2, compared with
 0.2185 and 1296.6 for ordinary HGB and 0.6475 and 832.9 for ridge.
 The scaling is defensible because the seven-day mean is positive in the
 training and validation data and uses only preceding days. It gives HGB a
-way to forecast against a recent demand level as ridership changes. The
-comparison does not establish performance on the held-out test period.
+way to forecast against a recent demand level as ridership changes. It is
+not just a way to win the comparison: the ratio target was fixed before
+looking at test, it adds no information the other models lack (ridge
+already sees `cnt_roll_7`), and it removes the reason HGB failed, namely
+that trees cannot predict outside the 2011 range of counts.
+
+I touched the test set once, after the validation work, by running
+`python -m src.train --ratio-target --final`. On H2 2012 test, the
+transformed HGB scored R² 0.6416 and MAE 810.1, against -0.4975 and
+1972.6 for ordinary HGB, 0.5833 and 947.1 for ridge, and 0.5099 and
+840.1 for persistence. The gain holds on held-out data. The committed
+`reports/metrics.json` still comes from the untransformed pipeline; the
+code is behind the `--ratio-target` flag in `src/train.py`, and it never
+writes the metrics file.
 
 ## Exercise 5: ridge vs persistence
 
