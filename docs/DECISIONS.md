@@ -33,3 +33,4 @@ this team actually used the test scores.
 - 2026-11-20: Seeded fault 1 (forbidden target column in feature_columns) committed on purpose so the history shows it; `make test` goes red: 4 failed, 19 passed in 2.40s.
 - 2026-11-20: Fixed seeded fault 1 by restoring the original source; `make test`: 23 passed in 2.37s.
 - 2026-11-20: Seeded fault 2 (.shift(1) deleted from cnt_roll_7) committed on purpose so the history shows it; `make test` goes red: 5 failed, 18 passed in 3.49s.
+- 2026-11-20: Fixed seeded fault 2 by restoring the original source; `make test`: 23 passed in 2.13s.
