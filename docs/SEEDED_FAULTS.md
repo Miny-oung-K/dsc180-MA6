@@ -245,6 +245,14 @@ FAILED tests/test_contract.py::test_weather_encoder_rejects_unknown_labels - ...
 [hook exit 2]
 ```
 
+On merged commit `d9cdcc4`, we reapplied the diff in a disposable copy, invoked the hook with an Edit payload, restored the original source, and ran `make test`.
+
+```text
+FAILED tests/test_contract.py::test_weather_encoder_rejects_unknown_labels - ...
+[hook exit 2]
+17 passed in 1.45s
+```
+
 ## Raw CSV overwritten from Bash
 
 This copy ran in the temporary checkout. The assignment's PostToolUse matcher
