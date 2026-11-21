@@ -79,3 +79,50 @@ def test_roll_3_is_mean_of_three_preceding_days(feats):
     """
     row = feats.set_index("dteday").loc[pd.Timestamp("2011-06-15")]
     assert row.cnt_roll_3 == pytest.approx((4460 + 5020 + 4891) / 3)
+
+
+# Every target-derived feature and the calendar days it must average.
+TARGET_LAGS = {
+    "cnt_lag_1": [1],
+    "cnt_lag_7": [7],
+    "cnt_roll_7": list(range(1, 8)),
+    "cnt_roll_3": list(range(1, 4)),
+}
+
+
+def test_all_target_lags_match_calendar_days(feats):
+    """Every lag and rolling feature, on every row, equals the mean of cnt on
+    the exact calendar days it claims -- and none of those days may be the
+    missing 2011-03-10. This fails if reindex_to_calendar is skipped (rows
+    after the gap would silently use the wrong day) or if any shift is off
+    by one."""
+    raw = load_raw().set_index("dteday")[TARGET]
+    by_date = feats.set_index("dteday")
+    for col, offsets in TARGET_LAGS.items():
+        assert col in by_date.columns, f"{col} missing from features"
+        for date, value in by_date[col].items():
+            days = [date - pd.Timedelta(days=k) for k in offsets]
+            missing = [d.date() for d in days if d not in raw.index]
+            assert not missing, f"{col} on {date.date()} relies on missing day(s) {missing}"
+            assert value == pytest.approx(raw[days].mean()), f"{col} wrong on {date.date()}"
+
+
+@pytest.mark.parametrize("day", ["2011-06-15", "2012-03-01", "2012-10-29"])
+def test_no_feature_changes_when_same_day_target_changes(day):
+    """Catches same-day leakage under any column name. Change cnt (and its
+    components, keeping casual + registered == cnt) on one date only: every
+    model input on that date must stay the same, because nothing about
+    today's rides is known when today is forecast."""
+    raw = load_raw()
+    date = pd.Timestamp(day)
+    bumped = raw.copy()
+    on_day = bumped.dteday == date
+    for col in ["casual", "registered", "cnt"]:
+        bumped.loc[on_day, col] = bumped.loc[on_day, col] * 2 + 500
+    before = build_features(raw)
+    after = build_features(bumped)
+    cols = feature_columns(before)
+    row_before = before.set_index("dteday").loc[date, cols].astype(float)
+    row_after = after.set_index("dteday").loc[date, cols].astype(float)
+    changed = row_before.index[(row_before - row_after).abs() > 1e-9].tolist()
+    assert not changed, f"features that move with same-day cnt on {day}: {changed}"
