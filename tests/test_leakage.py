@@ -117,8 +117,11 @@ def test_no_feature_changes_when_same_day_target_changes(day):
     date = pd.Timestamp(day)
     bumped = raw.copy()
     on_day = bumped.dteday == date
-    for col in ["casual", "registered", "cnt"]:
+    for col in ["casual", "registered"]:
         bumped.loc[on_day, col] = bumped.loc[on_day, col] * 2 + 500
+    bumped.loc[on_day, TARGET] = (
+        bumped.loc[on_day, "casual"] + bumped.loc[on_day, "registered"]
+    )
     before = build_features(raw)
     after = build_features(bumped)
     cols = feature_columns(before)
