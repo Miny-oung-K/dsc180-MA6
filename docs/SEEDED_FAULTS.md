@@ -288,6 +288,46 @@ $ /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m pytest -q --
 [exit 0]
 ```
 
+### Implemented: raw-file checksum (catches the fourth fault)
+
+`src/ingest.load_raw()` now calls `check_raw_checksum()`, which refuses any
+`data/raw/bike_daily.csv` whose sha256 does not start with
+`RAW_SHA256_PREFIX` (`a6bed1577f6e4de5`, in `src/config.py`). Because every
+stage loads the raw file through `load_raw()`, the same Bash `cp` now fails
+`make data`, `make features` and `make test`, even when the header is
+unchanged and only values differ. The Edit/Write hook still does not fire on
+Bash, but the pipeline itself no longer runs on a changed file. Two tests in
+`tests/test_contract.py` cover it: the pinned file passes, and a copy with one
+extra byte is rejected. Real output from a disposable copy of the repo:
+
+```text
+$ cp -v extra-column.csv data/raw/bike_daily.csv
+'extra-column.csv' -> 'data/raw/bike_daily.csv'
+[exit 0]
+$ make data
+python -m src.ingest
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/sessions/rcw-012jgbfmebxauncvwcwmvk7m/fault4/src/ingest.py", line 49, in <module>
+    df = load_raw()
+         ^^^^^^^^^^
+  File "/sessions/rcw-012jgbfmebxauncvwcwmvk7m/fault4/src/ingest.py", line 37, in load_raw
+    check_raw_checksum()
+  File "/sessions/rcw-012jgbfmebxauncvwcwmvk7m/fault4/src/ingest.py", line 29, in check_raw_checksum
+    raise ValueError(
+ValueError: raw data checksum mismatch: bike_daily.csv sha256 84f9e9bc03058413..., expected a6bed1577f6e4de5... -- data/raw/ must not change
+make: *** [Makefile:7: data] Error 1
+[exit 2]
+$ python -m pytest -q --color=no tests 2>&1 | tail -5
+ERROR tests/test_leakage.py::test_roll_3_is_mean_of_three_preceding_days - Va...
+ERROR tests/test_split.py::test_splits_non_empty - ValueError: raw data check...
+ERROR tests/test_split.py::test_splits_are_ordered_in_time - ValueError: raw ...
+ERROR tests/test_split.py::test_no_overlapping_dates - ValueError: raw data c...
+2 failed, 3 passed, 14 errors in 1.35s
+[exit 1]
+```
+
 ## Exercise 1: failing feature test (before implementation)
 
 Feature: `cnt_roll_3`, the mean ridership over the three calendar days before date *d*.

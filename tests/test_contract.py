@@ -12,7 +12,7 @@ from src.config import (
     UNUSED_RAW_COLS,
 )
 from src.features import build_features, encode_weather, feature_columns, reindex_to_calendar
-from src.ingest import load_raw
+from src.ingest import check_raw_checksum, load_raw
 from src.train import MODELS, temporal_split
 
 
@@ -75,3 +75,15 @@ def test_persistence_baseline_is_reported():
     """The baseline that matters for a lag-driven model is 'yesterday again'.
     It must be in the comparison, whatever its score."""
     assert "baseline_persistence" in MODELS
+
+
+def test_raw_checksum_matches_pinned_file():
+    assert check_raw_checksum(RAW).startswith("a6bed1577f6e4de5")
+
+
+def test_raw_checksum_rejects_modified_copy(tmp_path):
+    """A one-byte change to the raw file must be refused."""
+    copy = tmp_path / "bike_daily.csv"
+    copy.write_bytes(RAW.read_bytes() + b"\n")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        check_raw_checksum(copy)

@@ -3,6 +3,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw" / "bike_daily.csv"
+# The raw file must never change. ingest.load_raw() refuses any file whose
+# sha256 does not start with this prefix, so a copy into data/raw/ from Bash
+# (which the Edit/Write hook cannot see) fails make data, make features and make test.
+RAW_SHA256_PREFIX = "a6bed1577f6e4de5"
 PROCESSED = ROOT / "data" / "processed" / "features.parquet"
 METRICS = ROOT / "reports" / "metrics.json"
 
