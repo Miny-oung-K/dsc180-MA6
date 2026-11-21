@@ -1,19 +1,20 @@
 ## Results
 
-Validation scores from the pinned environment, before and after adding
-`cnt_roll_3`. The test scores will be added after the team merges and runs
-the final evaluation.
+Scores from `make all` on the merged code, copied from `reports/metrics.json`.
+"Before" is the selected feature set (the top-level entries), and "With `cnt_roll_3`" is the
+`with_cnt_roll_3` entry. The feature decision was made on validation only. Test scores were
+computed once, after the merge, for this final table.
 
-| Feature set | Model | Validation R² | Validation MAE |
-| --- | --- | ---: | ---: |
-| Before | Mean baseline | -0.9318 | 2002.2 |
-| Before | Persistence | 0.4507 | 900.6 |
-| Before | Ridge | 0.6475 | 832.9 |
-| Before | HGB | 0.2185 | 1296.6 |
-| With `cnt_roll_3` | Mean baseline | -0.9318 | 2002.2 |
-| With `cnt_roll_3` | Persistence | 0.4507 | 900.6 |
-| With `cnt_roll_3` | Ridge | 0.6439 | 836.5 |
-| With `cnt_roll_3` | HGB | 0.1983 | 1311.6 |
+| Feature set | Model | Validation R² | Validation MAE | Test R² | Test MAE |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Before | Mean baseline | -0.9318 | 2002.2 | -2.1441 | 2847.7 |
+| Before | Persistence | 0.4507 | 900.6 | 0.5099 | 840.1 |
+| Before | Ridge | 0.6475 | 832.9 | 0.5833 | 947.1 |
+| Before | HGB | 0.2185 | 1296.6 | -0.4975 | 1972.6 |
+| With `cnt_roll_3` | Mean baseline | -0.9318 | 2002.2 | -2.1441 | 2847.7 |
+| With `cnt_roll_3` | Persistence | 0.4507 | 900.6 | 0.5099 | 840.1 |
+| With `cnt_roll_3` | Ridge | 0.6439 | 836.5 | 0.5800 | 946.2 |
+| With `cnt_roll_3` | HGB | 0.1983 | 1311.6 | -0.5338 | 1998.7 |
 
 ## Headline finding
 
@@ -39,7 +40,7 @@ comparison does not establish performance on the held-out test period.
 
 I would deploy ridge, because validation is the split this choice is made on, and on validation ridge beats persistence on both measures. On H1 2012 validation, ridge has R² 0.6475 against 0.4507 for persistence, and MAE 832.9 rides against 900.6, so it is off by 67.7 fewer rides per day on average. The H2 2012 test set, scored once after that choice, is the held-out estimate, and it is less favourable: ridge R² 0.5833 against 0.5099, but MAE 947.1 against 840.1, which is 107.0 more rides of absolute error per day. Ridge still wins on squared error, which weights large misses more heavily, but it loses its MAE advantage when ridership moves further from the 2011 training range. I report that reversal rather than switching to persistence, because choosing the model on its test score would mean tuning on test. If absolute error is the measure that matters most in deployment, the test result is a reason to revisit the choice with new validation data.
 
-The numbers above come from the assignment's starter results. Update this comparison against the final `reports/metrics.json` after the team's feature and validation work is complete.
+The numbers above match the selected feature set in the final `reports/metrics.json`.
 
 ## Attribution
 
