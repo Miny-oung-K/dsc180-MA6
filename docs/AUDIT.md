@@ -1,6 +1,6 @@
 # Branch audit
 
-## Member B review of Member A's feature branch
+## Brian's review of Minyoung's feature branch
 
 - Branch [feature](https://github.com/Miny-oung-K/dsc180-MA6/tree/feature)
 - Audited commit [3307161af5f63e38f48cca952b09d7763d726e3e](https://github.com/Miny-oung-K/dsc180-MA6/commit/3307161af5f63e38f48cca952b09d7763d726e3e)
@@ -64,7 +64,7 @@ The in-repo coverage alone is weaker than that claim: `test_rolling_mean_exclude
 - **Dtype-driven feature gate:** `feature_columns` (`src/features.py:86-87`) admits any future numeric column not listed in `FORBIDDEN`. The current schema is clean, but a new numeric target restatement added to the mirror would silently enter the model. Also, `src/ingest.py`, the raw CSV headers, `tests/test_contract.py`, the `Makefile`, and `requirements.txt` were not in the excerpts, so full column enumeration and command/version reproduction could not be confirmed.
 ````
 
-## Member B verdict
+## Brian's verdict
 
 I found no leakage in the three-day mean and no error that changes the
 reported validation scores. I agree with the auditor about calendar
@@ -77,7 +77,7 @@ same-day weather caveat limits how far the results generalize to a
 day-ahead deployment. Verification's explicit CSV schema test addresses
 the separate risk that a newly added numeric column enters the model.
 
-## Member A review of Member B's verification branch
+## Minyoung's review of Brian's verification branch
 
 | Field | Value |
 |---|---|

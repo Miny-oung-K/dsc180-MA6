@@ -2,8 +2,9 @@
 
 Scores from `make all` on the merged code, copied from `reports/metrics.json`.
 "Before" is the selected feature set (the top-level entries), and "With `cnt_roll_3`" is the
-`with_cnt_roll_3` entry. The feature decision was made on validation only. Test scores were
-computed once, after the merge, for this final table.
+`with_cnt_roll_3` entry. Validation scores determined whether to keep the
+feature. The merged `make all` run generated the final count-target test
+scores for this table.
 
 | Feature set | Model | Validation R² | Validation MAE | Test R² | Test MAE |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -18,36 +19,35 @@ computed once, after the merge, for this final table.
 
 ## Headline finding
 
-Lagged demand carries this forecast, and the growth in ridership decides
-which model can use it. Mean daily rides rose 63% from 2011 to 2012, and
-56.5% of test days (104 of 184) exceed the 2011 maximum of 6,043. On H1
-2012 validation, ridge reaches R² 0.6475 (MAE 832.9) against 0.4507
-(900.6) for persistence and -0.9318 for the 2011 mean, while gradient
-boosting manages only 0.2185. On the H2 2012 test set, boosting falls to
-R² -0.4975 (MAE 1972.6), because trees trained on 2011 cannot predict
-above the 2011 range. Ridge holds R² 0.5833 on test, but its MAE of 947.1
-is worse than persistence's 840.1, so its advantage is in large misses
-rather than typical days. Our added feature, the three-day mean
-`cnt_roll_3`, lowered validation R² for both ridge (-0.0036) and boosting
-(-0.0202), so it is excluded from the final model inputs.
+Mean daily rides in the raw data rose 63% from 2011 to 2012. On H1 2012
+validation, ridge reached R² 0.6475 and MAE 832.9, ahead of persistence
+at 0.4507 and 900.6 and the 2011 mean at -0.9318 and 2002.2. On H2 2012
+test, 104 of 184 days exceeded the training maximum of 6,043 rides,
+while the fitted count-target HGB model's highest forecast was about
+5,537. Its test R² of -0.4975 and MAE of 1972.6 still beat the mean
+baseline's -2.1441 and 2847.7. Ridge achieved a higher test R² than
+persistence (0.5833 vs 0.5099), with higher MAE (947.1 vs 840.1).
+The three-day mean `cnt_roll_3` lowered validation R² for ridge by
+0.0036 and for HGB by 0.0202, so we kept it for comparison and excluded it
+from the selected model inputs.
 
 ## Exercise 4: target transformation
 
-In a validation-only experiment with the baseline feature set, I fit HGB
-to `cnt / cnt_roll_7` on the 2011 training rows. I multiplied each
+In a validation-only experiment with the baseline feature set, we fit HGB
+to `cnt / cnt_roll_7` on the 2011 training rows. We multiplied each
 predicted ratio by that day's `cnt_roll_7` to recover a forecast in rides.
 The resulting validation R² was 0.7454 and MAE was 687.2, compared with
 0.2185 and 1296.6 for ordinary HGB and 0.6475 and 832.9 for ridge.
 The scaling is defensible because the seven-day mean is positive in the
 training and validation data and uses only preceding days. It gives HGB a
-way to forecast against a recent demand level as ridership changes. It is
-not just a way to win the comparison: the ratio target was fixed before
-looking at test, it adds no information the other models lack (ridge
-already sees `cnt_roll_7`), and it removes the reason HGB failed, namely
-that trees cannot predict outside the 2011 range of counts.
+way to forecast against a recent demand level as ridership changes.
+Ridge already uses `cnt_roll_7`, so the transformation uses information
+already available to the other models. Multiplying by the recent demand
+level allows the forecasts in rides to scale as demand grows.
 
-I touched the test set once, after the validation work, by running
-`python -m src.train --ratio-target --final`. On H2 2012 test, the
+After fixing the ratio target based on validation, we evaluated the
+transformed model on H2 2012 in a separate final run using
+`python -m src.train --ratio-target --final`. On that split, the
 transformed HGB scored R² 0.6416 and MAE 810.1, against -0.4975 and
 1972.6 for ordinary HGB, 0.5833 and 947.1 for ridge, and 0.5099 and
 840.1 for persistence. The gain holds on held-out data. The committed
@@ -57,38 +57,50 @@ writes the metrics file.
 
 ## Exercise 5: ridge vs persistence
 
-I would deploy ridge, because validation is the split this choice is made on, and on validation ridge beats persistence on both measures. On H1 2012 validation, ridge has R² 0.6475 against 0.4507 for persistence, and MAE 832.9 rides against 900.6, so it is off by 67.7 fewer rides per day on average. The H2 2012 test set, scored once after that choice, is the held-out estimate, and it is less favourable: ridge R² 0.5833 against 0.5099, but MAE 947.1 against 840.1, which is 107.0 more rides of absolute error per day. Ridge still wins on squared error, which weights large misses more heavily, but it loses its MAE advantage when ridership moves further from the 2011 training range. I report that reversal rather than switching to persistence, because choosing the model on its test score would mean tuning on test. If absolute error is the measure that matters most in deployment, the test result is a reason to revisit the choice with new validation data.
+We recommend ridge on the basis of H1 2012 validation. Ridge achieved R²
+0.6475 versus 0.4507 for persistence and an MAE of 832.9 rides versus
+900.6, a reduction of 67.7 rides per day. An earlier draft recommended
+persistence using the starter's test MAE. Minyoung's pre-merge audit
+reproduced the test scores and showed that the recommendation had used
+the wrong split, so we revised it using validation. On H2 2012, ridge
+still reduced squared error (R² 0.5833 vs 0.5099), but it averaged 107.0
+more rides of absolute error per day (MAE 947.1 vs 840.1). If deployment
+is judged primarily on MAE, we would revisit the choice with new
+validation data.
 
 The numbers above match the selected feature set in the final `reports/metrics.json`.
 
 ## Attribution
 
-Member B used DeepSeek V4.1 Flash 1017 through OpenRouter in Claude Code
-at max effort for the fault experiments and branch audit. The attempted
-Ollama setup ended before any model run. Codex assisted with implementation,
-verification, and drafting.
+Minyoung used hosted Claude Opus 5.5 in the Claude app's agent workspace
+with instructor permission. Brian used DeepSeek V4.1 Flash 1017 through
+OpenRouter in Claude Code at max effort. Brian switched the planned
+provider from Ollama before running any local model and also used Codex
+for implementation, verification, and drafting. The merged repo's
+`agent/audit.py` run used DeepSeek V4.1 Flash 1017 via OpenRouter and
+reported no leakage or findings.
 
-- Agent-assisted files include `tests/test_contract.py`, the schema
-  classifications in `src/config.py`, the Claude Code hook and
-  `/seed-fault` skill, `docs/SEEDED_FAULTS.md`, and this report draft.
-- Member B ran the verification workflow on the shared task definition,
-  retaining the starter's date split and two baselines. The explicit raw
-  header classification and response to unexpected weather labels are
-  recorded in `docs/DECISIONS.md`.
+**Agent-generated or agent-assisted work**
 
-Member A used Claude Opus 5.5 (hosted, through the Claude app's agent
-workspace) instead of the local Ollama model, with the instructor's
-permission. The same model ran the `leakage-auditor` subagent for
-Member A's audit. The final `agent/audit.py` run on the merged repo
-(`reports/audit.jsonl`) used DeepSeek V4.1 Flash 1017 via OpenRouter and
-reported no leakage and no findings, with high confidence.
+- Minyoung's agent wrote the three-day feature and test, the Exercise 1
+  red-test evidence, Minyoung's audit and draft verdict, the ratio-target
+  implementation and evaluation, and parts of the report. It also
+  assisted with the branch merge and conflict resolution.
+- Brian's agents wrote the raw-header and weather contract tests, the
+  schema classifications, the hook and `/seed-fault` skill, the fault
+  evidence, Brian's audit and draft verdict, the separate feature
+  comparison in `src/train.py`, and parts of the report.
 
-- Agent-generated by Member A's agent: the `cnt_roll_3` test and feature,
-  the Exercise 1 section of `docs/SEEDED_FAULTS.md`, the Member A audit
-  and draft verdict in `docs/AUDIT.md`, the Exercise 5 rewrite, the branch
-  merge and conflict resolution, the test columns in Results, the
-  `--ratio-target` flag and its test check, and this Headline paragraph.
-- Member A's decisions: which feature to add, agreeing with the audit
-  finding that Exercise 5 chose its model on test, choosing the model on
-  validation, and merging both branches into `main`. Each is recorded in
-  `docs/DECISIONS.md`.
+**Human decisions**
+
+- Minyoung chose the three-day rolling mean for the feature experiment,
+  accepted the audit finding about Exercise 5, and revised the model
+  recommendation to use validation. Minyoung merged the two audited
+  branches.
+- Brian approved keeping the three-day feature and test for comparison
+  and excluding the feature from the selected model inputs based on the
+  validation decline.
+- The team retained the starter's daily ride-count target, leakage
+  exclusions, chronological split, and two baselines.
+
+The rationale and outcomes are recorded in [the decision log](docs/DECISIONS.md).
