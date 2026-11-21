@@ -36,3 +36,4 @@ this team actually used the test scores.
 - 2026-11-20: Fixed seeded fault 2 by restoring the original source; `make test`: 23 passed in 2.13s.
 - 2026-11-20: Seeded fault 3 (raise removed from weather encoder) committed on purpose so the history shows it; `make test` goes red: 1 failed, 22 passed in 2.11s.
 - 2026-11-20: Fixed seeded fault 3 by restoring the original source; `make test`: 23 passed in 2.08s.
+- 2026-11-20: Audit run repeated on the final code (after the checksum, new leakage tests and seeded-fault commits): `agent/audit.py` with DeepSeek V4.1 Flash 1017 via OpenRouter. `reports/audit.jsonl` is byte-identical to the earlier run: leakage none, temporal_ok, baseline_reported and reproducible all true, no findings, confidence high.
